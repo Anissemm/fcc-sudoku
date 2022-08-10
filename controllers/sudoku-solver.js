@@ -12,8 +12,21 @@ const rowsMap = {
 
 class SudokuSolver {
 
-  validate(puzzleString) {
-    return puzzleString.length !== 81;
+  validate(puzzleString, value = null) {
+    if (/[^1-9.]/g.test(puzzleString)) {
+      return { valid: false, message: 'Invalid characters in puzzle' };
+    }
+
+    if (puzzleString.length !== 81) {
+      return { valid: false, message: 'Expected puzzle to be 81 characters long' };
+    }
+
+    if (value && (value.length !== 1 || /[^1-9]/g.test(value))) {
+      return { valid: false, message: 'Invalid value' };
+    }
+
+    return { valid: true }
+
   }
 
   getCoordinates(coordinateString) {
@@ -139,7 +152,7 @@ class SudokuSolver {
   }
 
   transformToGrid(string) {
-    const placehoderGrid = [
+    const emptyGrid = [
       [0, 0, 0, 0, 0, 0, 0, 0, 0],
       [0, 0, 0, 0, 0, 0, 0, 0, 0],
       [0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -151,23 +164,30 @@ class SudokuSolver {
       [0, 0, 0, 0, 0, 0, 0, 0, 0]
     ];
 
-    let col = 0;
-    let row = -1;
+    let grid = emptyGrid.slice();
 
-    for (let i = 0; i < string.length; i++) {
-      if (i % 9 === 0) {
-        row++;
+    try {
+      let col = 0;
+      let row = -1;
+
+      for (let i = 0; i < string.length; i++) {
+        if (i % 9 === 0) {
+          row++;
+        }
+
+        if (col % 9 === 0) {
+          col = 0;
+        }
+
+        grid[row][col] = string[i] === '.' ? 0 : parseInt(string[i]);
+        col++;
       }
-
-      if (col % 9 === 0) {
-        col = 0;
-      }
-
-      placehoderGrid[row][col] = string[i] === '.' ? 0 : parseInt(string[i]);
-      col++;
+      return grid;
+      
+    } catch (err) {
+      return null;
     }
 
-    return placehoderGrid;
   }
 
   transformToString(grid) {
@@ -176,6 +196,11 @@ class SudokuSolver {
 
   solve(puzzleString) {
     const grid = this.transformToGrid(puzzleString);
+
+    if (!grid) {
+      return false;
+    }
+
     const solved = this.solveSudoku(grid, 0, 0);
     return solved ? this.transformToString(grid) : false;
   }

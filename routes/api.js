@@ -14,20 +14,10 @@ module.exports = function (app) {
         return res.json({ error: 'Required field(s) missing' });
       }
 
-      if (/[^1-9.]/g.test(puzzle)) {
-        return res.json({ error: 'Invalid characters in puzzle' });
-      }
+      const puzzleCheck = solver.validate(puzzle, value);
 
-      if (puzzle.length !== 81) {
-        return res.json({ error: 'Expected puzzle to be 81 characters long' });
-      }
-
-      // if (!/^[A-I][1-9]$/i.test(coordinate.trim())) {
-      //   return res.json({ error: 'Invalid coordinate' });
-      // }
-
-      if (/[^1-9]/.test(value)) {
-        return res.json({ error: 'Invalid value' });
+      if (!puzzleCheck.valid) {
+        return res.json({ error: puzzleCheck.message });
       }
 
       const validation = solver.isValidPlacement(puzzle, coordinate, value);
@@ -36,33 +26,29 @@ module.exports = function (app) {
         return res.json({ error: 'Invalid coordinate' });
       }
 
-      console.log(validation)
-
       return res.json(validation);
     });
 
   app.route('/api/solve')
     .post((req, res) => {
-      const { puzzle } = req.body
+      const { puzzle } = req.body;
 
       if (!puzzle) {
-        return res.json({ error: 'Required field missing' })
+        return res.json({ error: 'Required field missing' });
       }
 
-      if (/[^1-9.]/g.test(puzzle)) {
-        return res.json({ error: 'Invalid characters in puzzle' })
+      const puzzleCheck = solver.validate(puzzle);
+
+      if (!puzzleCheck.valid) {
+        return res.json({ error: puzzleCheck.message });
       }
 
-      if (solver.validate(puzzle)) {
-        return res.json({ error: 'Expected puzzle to be 81 characters long' })
-      }
+      const solved = solver.solve(puzzle);
 
-      const solved = solver.solve(puzzle)
-      console.log(solved)
       if (!solved) {
-        return res.json({ error: 'Puzzle cannot be solved' })
+        return res.json({ error: 'Puzzle cannot be solved' });
       }
 
-      res.json({ solution: solved })
+      res.json({ solution: solved });
     });
 };
